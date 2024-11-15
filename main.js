@@ -17,11 +17,11 @@ let selectedBody = null;
 const radiusFactor = 0.001; 
 
 const bodies = [
-    { x: 800, y: 800, vx: (Math.random() - 1) / 3, vy: (Math.random() - 1) / 3, mass: 1e12, color: 'red', trail: [] },
-    { x: 700, y: 400, vx: (Math.random() - 1) / 3, vy: (Math.random() - 1) / 3, mass: 1e12, color: 'blue', trail: [] },
-    { x: 300, y: 300, vx: (Math.random() - 1) / 3, vy: (Math.random() - 1) / 3, mass: 1e12, color: 'green', trail: [] }
+    { x: 1288, y: 781, vx: (Math.random() - 0.5) / 1, vy: (Math.random() - 0.5) / 1, mass: 1e12, color: 'red', trail: [] },
+    { x: 1400, y: 393, vx: (Math.random() - 0.5) / 1, vy: (Math.random() - 0.5) / 1, mass: 1e12, color: 'blue', trail: [] },
+    { x: 717, y: 747, vx: (Math.random() - 0.5) / 1, vy: (Math.random() - 0.5) / 1, mass: 1e12, color: 'green', trail: [] }
 ];
-
+console.log(bodies)
 console.log("please log this");
 
 const mass1Slider = document.getElementById('mass1');
@@ -82,9 +82,10 @@ canvas.addEventListener('mouseup', () => {
 
 function calculateForces() {
     bodies.forEach((bodyA, i) => {
-      bodyA.ax = 0;
-      bodyA.ay = 0;
-      bodies.forEach((bodyB, j) => {
+        //console.log(bodyA.mass);
+        bodyA.ax = 0;
+        bodyA.ay = 0;
+        bodies.forEach((bodyB, j) => {
         if (i !== j) {
           const dx = bodyB.x - bodyA.x;
           const dy = bodyB.y - bodyA.y;
@@ -93,11 +94,16 @@ function calculateForces() {
   
           if (distance < collisionThreshold) {
             if (bodyA.mass < bodyB.mass) {
-              bodies.splice(i, 1);
-              i--;
+                bodies[j].vx /= 1000;
+                bodies[j].vy /= 1000;
+                bodies.splice(i, 1);
+                i--;
             } else {
-              trails.push(bodyB.trail); 
-              bodies.splice(j, 1);
+                trails.push(bodyB.trail); 
+                bodies[i].vx /= 1000;
+                bodies[i].vy /= 1000;
+
+                bodies.splice(j, 1);
             }
           }
   
@@ -116,10 +122,10 @@ function updatePositions() {
       body.vy += body.ay;
       body.x += body.vx;
       body.y += body.vy;
-  
+      body.mass = body.mass * (1 + ((Math.random() - 0.5) * 0.000001));
       body.trail.push({ x: body.x, y: body.y });
   
-      if (body.trail.length > 1500) body.trail.shift();
+      if (body.trail.length > 20000) body.trail.shift();
     });
   }
 
