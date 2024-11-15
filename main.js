@@ -7,15 +7,20 @@ const popup = document.getElementById('popup');
 const startButton = document.getElementById('start-button');
 
 console.log("Script loaded");
+console.log("Variables declared");
 
 const G = 6.67430e-11;
 let isRunning = false;
 let animationFrame;
+let isDragging = false;
+let selectedBody = null;
+const radius = 10; // Radius of each body for click detection
+
 
 const bodies = [
-  { x: 300, y: 300, vx: 0, vy: 0.2, mass: 1e12, color: 'red' },
-  { x: 500, y: 300, vx: -0.2, vy: 0, mass: 1e12, color: 'blue' },
-  { x: 400, y: 500, vx: 0.1, vy: -0.1, mass: 1e12, color: 'green' }
+  { x: 800, y: 800, vx: 0, vy: 0.2, mass: 1e12, color: 'red' },
+  { x: 700, y: 400, vx: -0.2, vy: 0, mass: 1e12, color: 'blue' },
+  { x: 300, y: 300, vx: 0.1, vy: -0.1, mass: 1e12, color: 'green' }
 ];
 
 // Get elements for sliders
@@ -35,12 +40,53 @@ function updateMasses() {
   mass1Value.textContent = mass1Slider.value;
   mass2Value.textContent = mass2Slider.value;
   mass3Value.textContent = mass3Slider.value;
+
+  // Redraw bodies when mass changes
+  drawBodies();
 }
 
 mass1Slider.addEventListener('input', updateMasses);
 mass2Slider.addEventListener('input', updateMasses);
 mass3Slider.addEventListener('input', updateMasses);
 
+// Function to detect if the mouse is over a body
+function getBodyAtPosition(x, y) {
+  return bodies.find(body => {
+    const dx = body.x - x;
+    const dy = body.y - y;
+    return Math.sqrt(dx * dx + dy * dy) < radius;
+  });
+}
+
+// Mouse event handlers
+canvas.addEventListener('mousedown', (event) => {
+  if (isRunning) return;
+
+  const mouseX = event.offsetX;
+  const mouseY = event.offsetY;
+  selectedBody = getBodyAtPosition(mouseX, mouseY);
+
+  if (selectedBody) {
+    isDragging = true;
+  }
+});
+
+canvas.addEventListener('mousemove', (event) => {
+  if (isDragging && selectedBody) {
+    const mouseX = event.offsetX;
+    const mouseY = event.offsetY;
+    selectedBody.x = mouseX;
+    selectedBody.y = mouseY;
+    drawBodies(); // Redraw as the body is being dragged
+  }
+});
+
+canvas.addEventListener('mouseup', () => {
+  isDragging = false;
+  selectedBody = null;
+});
+
+// Calculate gravitational forces
 function calculateForces() {
   bodies.forEach((bodyA, i) => {
     bodyA.ax = 0;
@@ -69,14 +115,17 @@ function updatePositions() {
 }
 
 function drawBodies() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  bodies.forEach(body => {
-    ctx.beginPath();
-    ctx.arc(body.x, body.y, 0, 0, 2 * Math.PI);
-    ctx.fillStyle = body.color;
-    ctx.fill();
-  });
-}
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    bodies.forEach(body => {
+      // Calculate the radius based on the mass
+      const radius = Math.cbrt(body.mass) * 0.001; // Adjust the scaling factor as needed
+  
+      ctx.beginPath();
+      ctx.arc(body.x, body.y, radius, 0, 2 * Math.PI);
+      ctx.fillStyle = body.color;
+      ctx.fill();
+    });
+  }
 
 function animate() {
   if (isRunning) {
@@ -88,25 +137,21 @@ function animate() {
 }
 
 function toggleSimulation() {
-    console.log("Start button clicked");
-  
-    // Check if elements are found
-    console.log("Popup element:", popup);
-    console.log("Canvas element:", canvas);
-  
-    if (popup && canvas) {
-      popup.style.display = 'none';
-      canvas.style.display = 'block';
-    } else {
-      console.error("Popup or Canvas element not found");
-    }
-  
-    isRunning = true;
-    animate();
+  console.log("Start button clicked");
+
+  if (popup && canvas) {
+    popup.style.display = 'none';
+    canvas.style.display = 'block';
   }
+
+  isRunning = true;
+  animate();
+}
 
 // Attach event listener to the Start button
 startButton.addEventListener('click', toggleSimulation);
 
-// Initialize masses
+// Initialize masses, draw bodies initially, and make canvas visible
+canvas.style.display = 'block';
 updateMasses();
+drawBodies();
