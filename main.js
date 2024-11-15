@@ -7,7 +7,7 @@ const popup = document.getElementById('popup');
 const startButton = document.getElementById('start-button');
 
 console.log("Script loaded");
-console.log("Variables declared");
+
 
 const G = 6.67430e-11;
 let isRunning = false;
@@ -17,10 +17,12 @@ let selectedBody = null;
 const radiusFactor = 0.001; 
 
 const bodies = [
-  { x: 800, y: 800, vx: 0.1, vy: 0.1, mass: 1e12, color: 'red', trail: [] },
-  { x: 700, y: 400, vx: 0.0, vy: 0.1, mass: 1e12, color: 'blue', trail: [] },
-  { x: 300, y: 300, vx: -0.1, vy: 0.0, mass: 1e12, color: 'green', trail: [] }
+    { x: 800, y: 800, vx: (Math.random() - 1) / 3, vy: (Math.random() - 1) / 3, mass: 1e12, color: 'red', trail: [] },
+    { x: 700, y: 400, vx: (Math.random() - 1) / 3, vy: (Math.random() - 1) / 3, mass: 1e12, color: 'blue', trail: [] },
+    { x: 300, y: 300, vx: (Math.random() - 1) / 3, vy: (Math.random() - 1) / 3, mass: 1e12, color: 'green', trail: [] }
 ];
+
+console.log("please log this");
 
 const mass1Slider = document.getElementById('mass1');
 const mass2Slider = document.getElementById('mass2');
@@ -163,7 +165,7 @@ function animate() {
 }
 
 function toggleSimulation() {
-  console.log("Start button clicked");
+  console.log("Starting this shit");
   popup.style.display = 'none';
   canvas.style.display = 'block';
   isRunning = true;
