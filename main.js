@@ -2,7 +2,7 @@ const canvas = document.getElementById('simulation');
 const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
-
+const trails = [];
 const popup = document.getElementById('popup');
 const startButton = document.getElementById('start-button');
 
@@ -14,13 +14,12 @@ let isRunning = false;
 let animationFrame;
 let isDragging = false;
 let selectedBody = null;
-const radius = 10; // Radius of each body for click detection
-
+const radiusFactor = 0.001; // Scaling factor for the sphere size based on mass
 
 const bodies = [
-  { x: 800, y: 800, vx: 0, vy: 0.2, mass: 1e12, color: 'red' },
-  { x: 700, y: 400, vx: -0.2, vy: 0, mass: 1e12, color: 'blue' },
-  { x: 300, y: 300, vx: 0.1, vy: -0.1, mass: 1e12, color: 'green' }
+  { x: 800, y: 800, vx: 0.0, vy: 0.0, mass: 1e12, color: 'red', trail: [] },
+  { x: 700, y: 400, vx: 0.0, vy: 0.0, mass: 1e12, color: 'blue', trail: [] },
+  { x: 300, y: 300, vx: 0.0, vy: 0.0, mass: 1e12, color: 'green', trail: [] }
 ];
 
 // Get elements for sliders
@@ -41,7 +40,6 @@ function updateMasses() {
   mass2Value.textContent = mass2Slider.value;
   mass3Value.textContent = mass3Slider.value;
 
-  // Redraw bodies when mass changes
   drawBodies();
 }
 
@@ -54,21 +52,19 @@ function getBodyAtPosition(x, y) {
   return bodies.find(body => {
     const dx = body.x - x;
     const dy = body.y - y;
+    const radius = Math.cbrt(body.mass) * radiusFactor;
     return Math.sqrt(dx * dx + dy * dy) < radius;
   });
 }
 
-// Mouse event handlers
+// Mouse event handlers for dragging bodies
 canvas.addEventListener('mousedown', (event) => {
   if (isRunning) return;
-
   const mouseX = event.offsetX;
   const mouseY = event.offsetY;
   selectedBody = getBodyAtPosition(mouseX, mouseY);
 
-  if (selectedBody) {
-    isDragging = true;
-  }
+  if (selectedBody) isDragging = true;
 });
 
 canvas.addEventListener('mousemove', (event) => {
@@ -77,7 +73,7 @@ canvas.addEventListener('mousemove', (event) => {
     const mouseY = event.offsetY;
     selectedBody.x = mouseX;
     selectedBody.y = mouseY;
-    drawBodies(); // Redraw as the body is being dragged
+    drawBodies();
   }
 });
 
@@ -96,6 +92,16 @@ function calculateForces() {
         const dx = bodyB.x - bodyA.x;
         const dy = bodyB.y - bodyA.y;
         const distance = Math.sqrt(dx * dx + dy * dy) + 1e-16;
+        const collisionThreshold = 30; // Adjust this value as needed
+      if (distance < collisionThreshold) {
+        // Remove the smaller body
+        if (bodyA.mass < bodyB.mass) {
+          bodies.splice(i, 1); // Remove bodyA
+          i--; // Adjust index after deletion
+        } else {
+          bodies.splice(j, 1); // Remove bodyB
+        }
+      }
         const force = G * (bodyA.mass * bodyB.mass) / (distance * distance);
         const angle = Math.atan2(dy, dx);
         bodyA.ax += (force / bodyA.mass) * Math.cos(angle);
@@ -105,28 +111,47 @@ function calculateForces() {
   });
 }
 
+// Update positions and add trails
 function updatePositions() {
   bodies.forEach(body => {
     body.vx += body.ax;
     body.vy += body.ay;
     body.x += body.vx;
     body.y += body.vy;
+
+    // Add current position to the trail
+    body.trail.push({ x: body.x, y: body.y });
+
+    // Limit the length of the trail to avoid performance issues
+    if (body.trail.length > 15000) body.trail.shift();
   });
 }
 
+// Draw bodies and trails
 function drawBodies() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    bodies.forEach(body => {
-      // Calculate the radius based on the mass
-      const radius = Math.cbrt(body.mass) * 0.001; // Adjust the scaling factor as needed
-  
-      ctx.beginPath();
-      ctx.arc(body.x, body.y, radius, 0, 2 * Math.PI);
-      ctx.fillStyle = body.color;
-      ctx.fill();
-    });
-  }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  bodies.forEach(body => {
+    // Draw the trail
+    ctx.beginPath();
+    ctx.strokeStyle = body.color;
+    ctx.lineWidth = 1;
+    for (let i = 1; i < body.trail.length; i++) {
+      ctx.moveTo(body.trail[i - 1].x, body.trail[i - 1].y);
+      ctx.lineTo(body.trail[i].x, body.trail[i].y);
+    }
+    ctx.stroke();
+
+    // Draw the body
+    const radius = Math.cbrt(body.mass) * radiusFactor;
+    ctx.beginPath();
+    ctx.arc(body.x, body.y, radius, 0, 2 * Math.PI);
+    ctx.fillStyle = body.color;
+    ctx.fill();
+  });
+}
+
+// Animate the simulation
 function animate() {
   if (isRunning) {
     calculateForces();
@@ -136,22 +161,18 @@ function animate() {
   }
 }
 
+// Toggle simulation on Start button click
 function toggleSimulation() {
   console.log("Start button clicked");
-
-  if (popup && canvas) {
-    popup.style.display = 'none';
-    canvas.style.display = 'block';
-  }
-
+  popup.style.display = 'none';
+  canvas.style.display = 'block';
   isRunning = true;
   animate();
 }
 
-// Attach event listener to the Start button
 startButton.addEventListener('click', toggleSimulation);
 
-// Initialize masses, draw bodies initially, and make canvas visible
+// Initialize and draw bodies initially
 canvas.style.display = 'block';
 updateMasses();
 drawBodies();
