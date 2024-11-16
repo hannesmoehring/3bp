@@ -18,7 +18,7 @@ const radiusFactor = 0.001;
 
 const bodies = [
     { x: 1288, y: 781, vx: (Math.random() - 0.5) / 1, vy: (Math.random() - 0.5) / 1, mass: 1e12, color: 'red', trail: [] },
-    { x: 1400, y: 393, vx: (Math.random() - 0.5) / 1, vy: (Math.random() - 0.5) / 1, mass: 1e12, color: 'blue', trail: [] },
+    { x: 600, y: 393, vx: (Math.random() - 0.5) / 1, vy: (Math.random() - 0.5) / 1, mass: 1e12, color: 'blue', trail: [] },
     { x: 717, y: 747, vx: (Math.random() - 0.5) / 1, vy: (Math.random() - 0.5) / 1, mass: 1e12, color: 'green', trail: [] }
 ];
 console.log(bodies)
