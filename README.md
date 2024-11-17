@@ -31,7 +31,3 @@ This project visualizes a simplified simulation of the 3-body problem using HTML
 
 - HTML, CSS, JavaScript
 - Canvas API for rendering the simulation
-
-## License
-
-This project is open-source and available under the MIT License.
