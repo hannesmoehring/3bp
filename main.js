@@ -8,21 +8,18 @@ const startButton = document.getElementById('start-button');
 
 console.log("Script loaded");
 
-
 const G = 6.67430e-11;
 let isRunning = false;
 let animationFrame;
 let isDragging = false;
 let selectedBody = null;
-const radiusFactor = 0.001; 
+const radiusFactor = 0.001;
 
 const bodies = [
-    { x: 1288, y: 781, vx: (Math.random() - 0.5) / 1, vy: (Math.random() - 0.5) / 1, mass: 1e12, color: 'red', trail: [] },
-    { x: 600, y: 393, vx: (Math.random() - 0.5) / 1, vy: (Math.random() - 0.5) / 1, mass: 1e12, color: 'blue', trail: [] },
-    { x: 717, y: 747, vx: (Math.random() - 0.5) / 1, vy: (Math.random() - 0.5) / 1, mass: 1e12, color: 'green', trail: [] }
+    { x: 1288 + (Math.random() - 0.5) * 200, y: 781 + (Math.random() - 0.5) * 200, vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 4, mass: 1e12, color: 'red', trail: [] },
+    { x: 600 + (Math.random() - 0.5) * 200, y: 393 + (Math.random() - 0.5) * 200, vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 4, mass: 1e12, color: 'blue', trail: [] },
+    { x: 717 + (Math.random() - 0.5) * 200, y: 747 + (Math.random() - 0.5) * 200, vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 4, mass: 1e12, color: 'green', trail: [] }
 ];
-console.log(bodies)
-console.log("please log this");
 
 const mass1Slider = document.getElementById('mass1');
 const mass2Slider = document.getElementById('mass2');
@@ -31,16 +28,31 @@ const mass1Value = document.getElementById('mass1-value');
 const mass2Value = document.getElementById('mass2-value');
 const mass3Value = document.getElementById('mass3-value');
 
+// Find the heaviest body
+function findHeaviestBody() {
+    return bodies.reduce((heaviest, current) => 
+        current.mass > heaviest.mass ? current : heaviest
+    , bodies[0]);
+}
+
+// Convert world coordinates to screen coordinates
+function worldToScreen(x, y, centerX, centerY) {
+    return {
+        x: x - centerX + canvas.width / 2,
+        y: y - centerY + canvas.height / 2
+    };
+}
+
 function updateMasses() {
-  bodies[0].mass = parseFloat(mass1Slider.value);
-  bodies[1].mass = parseFloat(mass2Slider.value);
-  bodies[2].mass = parseFloat(mass3Slider.value);
+    bodies[0].mass = parseFloat(mass1Slider.value) * (1+Math.random()*0.001);
+    bodies[1].mass = parseFloat(mass2Slider.value) * (1+Math.random()*0.001);
+    bodies[2].mass = parseFloat(mass3Slider.value) * (1+Math.random()*0.001);
 
-  mass1Value.textContent = mass1Slider.value;
-  mass2Value.textContent = mass2Slider.value;
-  mass3Value.textContent = mass3Slider.value;
+    mass1Value.textContent = mass1Slider.value;
+    mass2Value.textContent = mass2Slider.value;
+    mass3Value.textContent = mass3Slider.value;
 
-  drawBodies();
+    drawBodies();
 }
 
 mass1Slider.addEventListener('input', updateMasses);
@@ -48,134 +60,147 @@ mass2Slider.addEventListener('input', updateMasses);
 mass3Slider.addEventListener('input', updateMasses);
 
 function getBodyAtPosition(x, y) {
-  return bodies.find(body => {
-    const dx = body.x - x;
-    const dy = body.y - y;
-    const radius = Math.cbrt(body.mass) * radiusFactor;
-    return Math.sqrt(dx * dx + dy * dy) < radius;
-  });
+    const heaviestBody = findHeaviestBody();
+    const screenCenter = worldToScreen(heaviestBody.x, heaviestBody.y, heaviestBody.x, heaviestBody.y);
+    
+    return bodies.find(body => {
+        const screenPos = worldToScreen(body.x, body.y, heaviestBody.x, heaviestBody.y);
+        const dx = screenPos.x - x;
+        const dy = screenPos.y - y;
+        const radius = Math.cbrt(body.mass) * radiusFactor;
+        return Math.sqrt(dx * dx + dy * dy) < radius;
+    });
 }
 
 canvas.addEventListener('mousedown', (event) => {
-  if (isRunning) return;
-  const mouseX = event.offsetX;
-  const mouseY = event.offsetY;
-  selectedBody = getBodyAtPosition(mouseX, mouseY);
+    if (isRunning) return;
+    const mouseX = event.offsetX;
+    const mouseY = event.offsetY;
+    selectedBody = getBodyAtPosition(mouseX, mouseY);
 
-  if (selectedBody) isDragging = true;
+    if (selectedBody) isDragging = true;
 });
 
 canvas.addEventListener('mousemove', (event) => {
-  if (isDragging && selectedBody) {
-    const mouseX = event.offsetX;
-    const mouseY = event.offsetY;
-    selectedBody.x = mouseX;
-    selectedBody.y = mouseY;
-    drawBodies();
-  }
+    if (isDragging && selectedBody) {
+        const heaviestBody = findHeaviestBody();
+        const mouseX = event.offsetX - canvas.width / 2 + heaviestBody.x;
+        const mouseY = event.offsetY - canvas.height / 2 + heaviestBody.y;
+        selectedBody.x = mouseX;
+        selectedBody.y = mouseY;
+        drawBodies();
+    }
 });
 
 canvas.addEventListener('mouseup', () => {
-  isDragging = false;
-  selectedBody = null;
+    isDragging = false;
+    selectedBody = null;
 });
 
 function calculateForces() {
     bodies.forEach((bodyA, i) => {
-        //console.log(bodyA.mass);
         bodyA.ax = 0;
         bodyA.ay = 0;
         bodies.forEach((bodyB, j) => {
-        if (i !== j) {
-          const dx = bodyB.x - bodyA.x;
-          const dy = bodyB.y - bodyA.y;
-          const distance = Math.sqrt(dx * dx + dy * dy) + 1e-16;
-          const collisionThreshold = 20;
-  
-          if (distance < collisionThreshold) {
-            if (bodyA.mass < bodyB.mass) {
-                bodies[j].vx /= 1000;
-                bodies[j].vy /= 1000;
-                bodies.splice(i, 1);
-                i--;
-            } else {
-                trails.push(bodyB.trail); 
-                bodies[i].vx /= 1000;
-                bodies[i].vy /= 1000;
+            if (i !== j) {
+                const dx = bodyB.x - bodyA.x;
+                const dy = bodyB.y - bodyA.y;
+                const distance = Math.sqrt(dx * dx + dy * dy) + 1e-16;
+                const collisionThreshold = 20;
 
-                bodies.splice(j, 1);
+                if (distance < collisionThreshold) {
+                    if (bodyA.mass < bodyB.mass) {
+                        bodies[j].vx /= 1000;
+                        bodies[j].vy /= 1000;
+                        bodies.splice(i, 1);
+                        i--;
+                    } else {
+                        trails.push(bodyB.trail);
+                        bodies[i].vx /= 1000;
+                        bodies[i].vy /= 1000;
+                        bodies.splice(j, 1);
+                    }
+                }
+
+                const force = G * (bodyA.mass * bodyB.mass) / (distance * distance);
+                const angle = Math.atan2(dy, dx);
+                bodyA.ax += (force / bodyA.mass) * Math.cos(angle);
+                bodyA.ay += (force / bodyA.mass) * Math.sin(angle);
             }
-          }
-  
-          const force = G * (bodyA.mass * bodyB.mass) / (distance * distance);
-          const angle = Math.atan2(dy, dx);
-          bodyA.ax += (force / bodyA.mass) * Math.cos(angle);
-          bodyA.ay += (force / bodyA.mass) * Math.sin(angle);
-        }
-      });
+        });
     });
-  }
+}
 
 function updatePositions() {
     bodies.forEach(body => {
-      body.vx += body.ax;
-      body.vy += body.ay;
-      body.x += body.vx;
-      body.y += body.vy;
-      body.mass = body.mass * (1 + ((Math.random() - 0.5) * 0.000001));
-      body.trail.push({ x: body.x, y: body.y });
-  
-      if (body.trail.length > 20000) body.trail.shift();
+        body.vx += body.ax;
+        body.vy += body.ay;
+        body.x += body.vx;
+        body.y += body.vy;
+        body.mass = body.mass * (1 + ((Math.random() - 0.5) * 0.000001));
+        body.trail.push({ x: body.x, y: body.y });
+
+        if (body.trail.length > 20000) body.trail.shift();
     });
-  }
+}
 
 function drawBodies() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
+    
+    // Find the heaviest body to center the view on
+    const heaviestBody = findHeaviestBody();
+    
+    // Draw trails
     trails.forEach(trail => {
-      ctx.beginPath();
-      ctx.strokeStyle = 'gray'; 
-      ctx.lineWidth = 1;
-      for (let i = 1; i < trail.length; i++) {
-        ctx.moveTo(trail[i - 1].x, trail[i - 1].y);
-        ctx.lineTo(trail[i].x, trail[i].y);
-      }
-      ctx.stroke();
+        ctx.beginPath();
+        ctx.strokeStyle = 'gray';
+        ctx.lineWidth = 1;
+        for (let i = 1; i < trail.length; i++) {
+            const pos1 = worldToScreen(trail[i - 1].x, trail[i - 1].y, heaviestBody.x, heaviestBody.y);
+            const pos2 = worldToScreen(trail[i].x, trail[i].y, heaviestBody.x, heaviestBody.y);
+            ctx.moveTo(pos1.x, pos1.y);
+            ctx.lineTo(pos2.x, pos2.y);
+        }
+        ctx.stroke();
     });
-  
+
+    // Draw active bodies and their trails
     bodies.forEach(body => {
-      ctx.beginPath();
-      ctx.strokeStyle = body.color;
-      ctx.lineWidth = 1;
-      for (let i = 1; i < body.trail.length; i++) {
-        ctx.moveTo(body.trail[i - 1].x, body.trail[i - 1].y);
-        ctx.lineTo(body.trail[i].x, body.trail[i].y);
-      }
-      ctx.stroke();
-  
-      const radius = Math.cbrt(body.mass) * radiusFactor;
-      ctx.beginPath();
-      ctx.arc(body.x, body.y, radius, 0, 2 * Math.PI);
-      ctx.fillStyle = body.color;
-      ctx.fill();
+        ctx.beginPath();
+        ctx.strokeStyle = body.color;
+        ctx.lineWidth = 1;
+        for (let i = 1; i < body.trail.length; i++) {
+            const pos1 = worldToScreen(body.trail[i - 1].x, body.trail[i - 1].y, heaviestBody.x, heaviestBody.y);
+            const pos2 = worldToScreen(body.trail[i].x, body.trail[i].y, heaviestBody.x, heaviestBody.y);
+            ctx.moveTo(pos1.x, pos1.y);
+            ctx.lineTo(pos2.x, pos2.y);
+        }
+        ctx.stroke();
+
+        const screenPos = worldToScreen(body.x, body.y, heaviestBody.x, heaviestBody.y);
+        const radius = Math.cbrt(body.mass) * radiusFactor;
+        ctx.beginPath();
+        ctx.arc(screenPos.x, screenPos.y, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = body.color;
+        ctx.fill();
     });
-  }
+}
 
 function animate() {
-  if (isRunning) {
-    calculateForces();
-    updatePositions();
-    drawBodies();
-    animationFrame = requestAnimationFrame(animate);
-  }
+    if (isRunning) {
+        calculateForces();
+        updatePositions();
+        drawBodies();
+        animationFrame = requestAnimationFrame(animate);
+    }
 }
 
 function toggleSimulation() {
-  console.log("Starting this shit");
-  popup.style.display = 'none';
-  canvas.style.display = 'block';
-  isRunning = true;
-  animate();
+    console.log("Starting simulation");
+    popup.style.display = 'none';
+    canvas.style.display = 'block';
+    isRunning = true;
+    animate();
 }
 
 startButton.addEventListener('click', toggleSimulation);
