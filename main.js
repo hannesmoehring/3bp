@@ -21,6 +21,8 @@ const bodies = [
     { x: 717 + (Math.random() - 0.5) * 200, y: 747 + (Math.random() - 0.5) * 200, vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 4, mass: 1e13, color: 'green', trail: [] }
 ];
 
+console.log("Bodies created: ", bodies);
+
 const mass1Slider = document.getElementById('mass1');
 const mass2Slider = document.getElementById('mass2');
 const mass3Slider = document.getElementById('mass3');
