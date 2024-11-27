@@ -73,6 +73,10 @@ const previousDistances = {
     'blue-green': null
 };
 
+function calculateVelocity(body) {
+    return Math.sqrt(body.vx * body.vx + body.vy * body.vy).toFixed(2);
+}
+
 function updateDistanceTable() {
     const tbody = document.getElementById('distance-tbody');
     tbody.innerHTML = '';
@@ -81,6 +85,18 @@ function updateDistanceTable() {
     const blue = bodies.find(b => b.color === 'blue');
     const green = bodies.find(b => b.color === 'green');
     
+    // Add velocity rows for existing bodies
+    bodies.forEach(body => {
+        const row = tbody.insertRow();
+        row.innerHTML = `<td>${body.color.charAt(0).toUpperCase() + body.color.slice(1)} velocity</td>
+                        <td>${calculateVelocity(body)}</td>`;
+    });
+    
+    // Add separator row
+    const separatorRow = tbody.insertRow();
+    separatorRow.innerHTML = '<td colspan="2"><hr style="border-color: rgba(255,255,255,0.2)"></td>';
+    
+    // Add distance rows
     if (red && blue) {
         const currentDistance = calculateDistance(red, blue);
         const color = getDistanceColor(currentDistance, previousDistances['red-blue']);
