@@ -129,7 +129,6 @@ function getDistanceColor(current, previous) {
 
 function getBodyAtPosition(x, y) {
     const heaviestBody = findHeaviestBody();
-    const screenCenter = worldToScreen(heaviestBody.x, heaviestBody.y, heaviestBody.x, heaviestBody.y);
     
     return bodies.find(body => {
         const screenPos = worldToScreen(body.x, body.y, heaviestBody.x, heaviestBody.y);
