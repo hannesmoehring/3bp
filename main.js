@@ -69,15 +69,26 @@ function calculateDistance(body1, body2) {
 
 function updateDistanceTable() {
     const tbody = document.getElementById('distance-tbody');
-    if (bodies.length < 3) return; 
-
-    const rows = tbody.getElementsByTagName('tr');
+    tbody.innerHTML = ''; 
     
-    rows[0].getElementsByTagName('td')[1].textContent = calculateDistance(bodies[0], bodies[1]);
+    const red = bodies.find(b => b.color === 'red');
+    const blue = bodies.find(b => b.color === 'blue');
+    const green = bodies.find(b => b.color === 'green');
     
-    rows[1].getElementsByTagName('td')[1].textContent = calculateDistance(bodies[0], bodies[2]);
+    if (red && blue) {
+        const row = tbody.insertRow();
+        row.innerHTML = `<td>Red ↔ Blue</td><td>${calculateDistance(red, blue)}</td>`;
+    }
     
-    rows[2].getElementsByTagName('td')[1].textContent = calculateDistance(bodies[1], bodies[2]);
+    if (red && green) {
+        const row = tbody.insertRow();
+        row.innerHTML = `<td>Red ↔ Green</td><td>${calculateDistance(red, green)}</td>`;
+    }
+    
+    if (blue && green) {
+        const row = tbody.insertRow();
+        row.innerHTML = `<td>Blue ↔ Green</td><td>${calculateDistance(blue, green)}</td>`;
+    }
 }
 
 function getBodyAtPosition(x, y) {
@@ -185,7 +196,6 @@ function drawBodies() {
         ctx.stroke();
     });
 
-    // Draw active bodies and their trails
     bodies.forEach(body => {
         ctx.beginPath();
         ctx.strokeStyle = body.color;
@@ -207,7 +217,6 @@ function drawBodies() {
     });
 
     updateDistanceTable();
-
 }
 
 function animate() {
