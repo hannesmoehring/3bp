@@ -61,6 +61,25 @@ mass1Slider.addEventListener('input', updateMasses);
 mass2Slider.addEventListener('input', updateMasses);
 mass3Slider.addEventListener('input', updateMasses);
 
+function calculateDistance(body1, body2) {
+    const dx = body2.x - body1.x;
+    const dy = body2.y - body1.y;
+    return Math.sqrt(dx * dx + dy * dy).toFixed(0);
+}
+
+function updateDistanceTable() {
+    const tbody = document.getElementById('distance-tbody');
+    if (bodies.length < 3) return; 
+
+    const rows = tbody.getElementsByTagName('tr');
+    
+    rows[0].getElementsByTagName('td')[1].textContent = calculateDistance(bodies[0], bodies[1]);
+    
+    rows[1].getElementsByTagName('td')[1].textContent = calculateDistance(bodies[0], bodies[2]);
+    
+    rows[2].getElementsByTagName('td')[1].textContent = calculateDistance(bodies[1], bodies[2]);
+}
+
 function getBodyAtPosition(x, y) {
     const heaviestBody = findHeaviestBody();
     const screenCenter = worldToScreen(heaviestBody.x, heaviestBody.y, heaviestBody.x, heaviestBody.y);
@@ -186,6 +205,9 @@ function drawBodies() {
         ctx.fillStyle = body.color;
         ctx.fill();
     });
+
+    updateDistanceTable();
+
 }
 
 function animate() {

@@ -41,3 +41,32 @@ canvas {
     display: block;
     background-color: #161b22;
 }
+
+#distance-table {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background-color: rgba(22, 27, 34, 0.9);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    z-index: 2;
+    font-size: 14px;
+}
+
+#distance-table table {
+    border-collapse: collapse;
+    color: #fff;
+}
+
+#distance-table th,
+#distance-table td {
+    padding: 5px 10px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#distance-table th {
+    font-weight: bold;
+    color: #58a6ff;
+}
