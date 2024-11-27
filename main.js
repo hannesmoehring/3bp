@@ -67,28 +67,48 @@ function calculateDistance(body1, body2) {
     return Math.sqrt(dx * dx + dy * dy).toFixed(0);
 }
 
+const previousDistances = {
+    'red-blue': null,
+    'red-green': null,
+    'blue-green': null
+};
+
 function updateDistanceTable() {
     const tbody = document.getElementById('distance-tbody');
-    tbody.innerHTML = ''; 
+    tbody.innerHTML = '';
     
     const red = bodies.find(b => b.color === 'red');
     const blue = bodies.find(b => b.color === 'blue');
     const green = bodies.find(b => b.color === 'green');
     
     if (red && blue) {
+        const currentDistance = calculateDistance(red, blue);
+        const color = getDistanceColor(currentDistance, previousDistances['red-blue']);
+        previousDistances['red-blue'] = currentDistance;
         const row = tbody.insertRow();
-        row.innerHTML = `<td>Red ↔ Blue</td><td>${calculateDistance(red, blue)}</td>`;
+        row.innerHTML = `<td>Red ↔ Blue</td><td style="color: ${color}">${currentDistance}</td>`;
     }
     
     if (red && green) {
+        const currentDistance = calculateDistance(red, green);
+        const color = getDistanceColor(currentDistance, previousDistances['red-green']);
+        previousDistances['red-green'] = currentDistance;
         const row = tbody.insertRow();
-        row.innerHTML = `<td>Red ↔ Green</td><td>${calculateDistance(red, green)}</td>`;
+        row.innerHTML = `<td>Red ↔ Green</td><td style="color: ${color}">${currentDistance}</td>`;
     }
     
     if (blue && green) {
+        const currentDistance = calculateDistance(blue, green);
+        const color = getDistanceColor(currentDistance, previousDistances['blue-green']);
+        previousDistances['blue-green'] = currentDistance;
         const row = tbody.insertRow();
-        row.innerHTML = `<td>Blue ↔ Green</td><td>${calculateDistance(blue, green)}</td>`;
+        row.innerHTML = `<td>Blue ↔ Green</td><td style="color: ${color}">${currentDistance}</td>`;
     }
+}
+
+function getDistanceColor(current, previous) {
+    if (previous === null) return 'white';
+    return current > previous ? '#4ade80' : '#ef4444';
 }
 
 function getBodyAtPosition(x, y) {
