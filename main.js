@@ -30,14 +30,12 @@ const mass1Value = document.getElementById('mass1-value');
 const mass2Value = document.getElementById('mass2-value');
 const mass3Value = document.getElementById('mass3-value');
 
-// Find the heaviest body
 function findHeaviestBody() {
     return bodies.reduce((heaviest, current) => 
         current.mass > heaviest.mass ? current : heaviest
     , bodies[0]);
 }
 
-// Convert world coordinates to screen coordinates
 function worldToScreen(x, y, centerX, centerY) {
     return {
         x: x - centerX + canvas.width / 2,
@@ -85,18 +83,15 @@ function updateDistanceTable() {
     const blue = bodies.find(b => b.color === 'blue');
     const green = bodies.find(b => b.color === 'green');
     
-    // Add velocity rows for existing bodies
     bodies.forEach(body => {
         const row = tbody.insertRow();
         row.innerHTML = `<td>${body.color.charAt(0).toUpperCase() + body.color.slice(1)} velocity</td>
                         <td>${calculateVelocity(body)}</td>`;
     });
     
-    // Add separator row
     const separatorRow = tbody.insertRow();
     separatorRow.innerHTML = '<td colspan="2"><hr style="border-color: rgba(255,255,255,0.2)"></td>';
     
-    // Add distance rows
     if (red && blue) {
         const currentDistance = calculateDistance(red, blue);
         const color = getDistanceColor(currentDistance, previousDistances['red-blue']);
@@ -177,14 +172,14 @@ function calculateForces() {
 
                 if (distance < collisionThreshold) {
                     if (bodyA.mass < bodyB.mass) {
-                        bodies[j].vx /= 1000;
-                        bodies[j].vy /= 1000;
+                        bodies[j].vx +=  Math.sqrt(bodyA.vx * (bodyA.mass / bodyB.mass));
+                        bodies[j].vy += Math.sqrt(bodyA.vy * (bodyA.mass / bodyB.mass));
                         bodies.splice(i, 1);
                         i--;
                     } else {
                         trails.push(bodyB.trail);
-                        bodies[i].vx /= 1000;
-                        bodies[i].vy /= 1000;
+                        bodies[i].vx -= Math.sqrt(bodyB.vx * (bodyB.mass / bodyA.mass));
+                        bodies[i].vy -= Math.sqrt(bodyB.vy * (bodyB.mass / bodyA.mass));
                         bodies.splice(j, 1);
                     }
                 }
@@ -214,10 +209,8 @@ function updatePositions() {
 function drawBodies() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Find the heaviest body to center the view on
     const heaviestBody = findHeaviestBody();
     
-    // Draw trails
     trails.forEach(trail => {
         ctx.beginPath();
         ctx.strokeStyle = 'gray';
